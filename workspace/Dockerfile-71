@@ -1,0 +1,165 @@
+# 编译PHP
+
+# 基本镜像
+FROM docker/workspace:2.0-71
+
+# 移除失败日志
+RUN rm /var/log/lastlog /var/log/faillog
+
+# 创建一个用户，防止一些文件拥有root权限
+ARG PUID=1000
+ARG PGID=1000
+
+ENV PUID ${PUID}
+ENV PGID ${PGID}
+
+RUN groupadd -g ${PGID} docker && \
+    useradd -u ${PUID} -g docker -m docker
+
+#####################################
+# IMAP扩展，邮件类
+#####################################
+
+ARG INSTALL_IMAP=false
+ENV INSTALL_IMAP ${INSTALL_IMAP}
+
+RUN if [ ${INSTALL_IMAP} = true ]; then \
+    apt-get update -yqq && \
+    apt-get install -y php7.1-imap \
+;fi
+
+#####################################
+# Set Timezone 设置时区
+#####################################
+
+ARG TZ=PRC
+ENV TZ ${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+#####################################
+# Composer: php包管理工具
+#####################################
+
+# 全局composer.json配置文件
+COPY ./composer.json /home/docker/.composer/composer.json
+
+# 确保 ~/.composer属于docker用户
+RUN chown -R docker:docker /home/docker/.composer
+USER docker
+
+# 全局安装
+RUN composer global install 
+
+#####################################
+# User Aliases 别名
+#####################################
+
+USER docker
+COPY ./aliases.sh /home/docker/aliases.sh
+RUN echo "" >> ~/.bashrc && \
+    echo "# Load Custom Aliases" >> ~/.bashrc && \
+    echo "source /home/docker/aliases.sh" >> ~/.bashrc && \
+	echo "" >> ~/.bashrc && \
+	sed -i 's/\r//' /home/docker/aliases.sh && \
+	sed -i 's/^#! \/bin\/sh/#! \/bin\/bash/' /home/docker/aliases.sh
+
+USER root
+RUN echo "" >> ~/.bashrc && \
+    echo "# Load Custom Aliases" >> ~/.bashrc && \
+    echo "source /home/docker/aliases.sh" >> ~/.bashrc && \
+	echo "" >> ~/.bashrc && \
+	sed -i 's/\r//' /home/docker/aliases.sh && \
+	sed -i 's/^#! \/bin\/sh/#! \/bin\/bash/' /home/docker/aliases.sh
+
+#####################################
+# xDebug:
+#####################################
+
+ARG INSTALL_XDEBUG=false
+RUN if [ ${INSTALL_XDEBUG} = true ]; then \
+    # Load the xdebug extension only with phpunit commands
+    apt-get update && \
+    apt-get install -y --force-yes php7.1-xdebug && \
+    sed -i 's/^;//g' /etc/php/7.1/cli/conf.d/20-xdebug.ini && \
+    echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/vendor/bin/phpunit'" >> ~/.bashrc \
+;fi
+# ADD for REMOTE debugging
+COPY ./xdebug.ini /etc/php/7.1/cli/conf.d/xdebug.ini
+
+#####################################
+# ssh:
+#####################################
+ARG INSTALL_WORKSPACE_SSH=false
+ENV INSTALL_WORKSPACE_SSH ${INSTALL_WORKSPACE_SSH}
+
+ADD insecure_id_rsa /tmp/id_rsa
+ADD insecure_id_rsa.pub /tmp/id_rsa.pub
+
+RUN if [ ${INSTALL_WORKSPACE_SSH} = true ]; then \
+    rm -f /etc/service/sshd/down && \
+    cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys \
+        && cat /tmp/id_rsa.pub >> /root/.ssh/id_rsa.pub \
+        && cat /tmp/id_rsa >> /root/.ssh/id_rsa \
+        && rm -f /tmp/id_rsa* \
+        && chmod 644 /root/.ssh/authorized_keys /root/.ssh/id_rsa.pub \
+    && chmod 400 /root/.ssh/id_rsa \
+;fi
+
+#####################################
+# MongoDB:
+#####################################
+
+# Check if Mongo needs to be installed
+ARG INSTALL_MONGO=false
+ENV INSTALL_MONGO ${INSTALL_MONGO}
+RUN if [ ${INSTALL_MONGO} = true ]; then \
+    # Install the mongodb extension
+    pecl -q install mongodb && \
+    echo "extension=mongodb.so" >> /etc/php/7.1/mods-available/mongodb.ini && \
+    ln -s /etc/php/7.1/mods-available/mongodb.ini /etc/php/7.1/cli/conf.d/30-mongodb.ini \
+;fi
+
+#####################################
+# PHP REDIS EXTENSION FOR PHP 7.1
+#####################################
+
+ARG INSTALL_PHPREDIS=false
+ENV INSTALL_PHPREDIS ${INSTALL_PHPREDIS}
+RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
+    # Install Php Redis extension
+    printf "\n" | pecl -q install -o -f redis && \
+    echo "extension=redis.so" >> /etc/php/7.1/mods-available/redis.ini && \
+    phpenmod redis \
+;fi
+
+#####################################
+# Non-root user : PHPUnit path
+#####################################
+
+# add ./vendor/bin to non-root user's bashrc (needed for phpunit)
+USER docker
+
+RUN echo "" >> ~/.bashrc && \
+    echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
+
+#####################################
+# ImageMagick:
+#####################################
+USER root
+ARG INSTALL_IMAGEMAGICK=false
+ENV INSTALL_IMAGEMAGICK ${INSTALL_IMAGEMAGICK}
+RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
+    apt-get install -y --force-yes imagemagick php-imagick \
+;fi
+
+#--------------------------------------------------------------------------
+# 后勤工作
+#--------------------------------------------------------------------------
+
+# 清理
+USER root
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 设置工作目录
+WORKDIR /var/www

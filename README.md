@@ -1,2 +1,3 @@
 # docker-php
-docker env
+
+建议：先下载好PHP扩展，可以减少请求时间。缺点就是更新不及时
