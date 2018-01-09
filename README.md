@@ -1,6 +1,7 @@
 # docker-php
 
 建议：先下载好PHP扩展，可以减少请求时间。缺点就是更新不及时
+
 Suggestion: Download the extensions first, that would reduce compile times. But it not the newest.
 
 ## Usage
@@ -15,11 +16,13 @@ docker-compose up -d mysql nginx redis mongo phpmyadmin memcached
 ## Document
 
 本项目抄袭自https://github.com/laradock/laradock 进行了相当的精简。
+
 The project copy the https://github.com/laradock/laradock and simplified.
 
 - phpmyadmin
 
 浏览器打开http://localhost:8080/ 服务器填写mysql，用户名root，密码root
+
 Open the browser and input  http://localhost:8080/ , host is mysql, user is root, password is root.
 
 - redis
