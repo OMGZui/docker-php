@@ -11,6 +11,8 @@ git clone https://github.com/OMGZui/docker-php.git
 cd docker-php
 docker-compose up -d mysql nginx redis mongo phpmyadmin memcached
 
+It only need a cup of tea time when network is fast.
+
 ```
 
 ## Document
