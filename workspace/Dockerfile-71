@@ -1,7 +1,7 @@
 # 编译PHP
 
 # 基本镜像
-FROM docker/workspace:2.0-71
+FROM laradock/workspace:2.0-71
 
 # 移除失败日志
 RUN rm /var/log/lastlog /var/log/faillog
@@ -79,7 +79,7 @@ ARG INSTALL_XDEBUG=false
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
     # Load the xdebug extension only with phpunit commands
     apt-get update && \
-    apt-get install -y --force-yes php7.1-xdebug && \
+    apt-get install -y --allow php7.1-xdebug && \
     sed -i 's/^;//g' /etc/php/7.1/cli/conf.d/20-xdebug.ini && \
     echo "alias phpunit='php -dzend_extension=xdebug.so /var/www/vendor/bin/phpunit'" >> ~/.bashrc \
 ;fi
@@ -149,7 +149,7 @@ USER root
 ARG INSTALL_IMAGEMAGICK=false
 ENV INSTALL_IMAGEMAGICK ${INSTALL_IMAGEMAGICK}
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
-    apt-get install -y --force-yes imagemagick php-imagick \
+    apt-get install -y --allow imagemagick php-imagick \
 ;fi
 
 #--------------------------------------------------------------------------
