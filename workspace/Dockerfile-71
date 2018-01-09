@@ -87,7 +87,7 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; then \
 COPY ./xdebug.ini /etc/php/7.1/cli/conf.d/xdebug.ini
 
 #####################################
-# ssh:
+# ssh: 远程连接
 #####################################
 ARG INSTALL_WORKSPACE_SSH=false
 ENV INSTALL_WORKSPACE_SSH ${INSTALL_WORKSPACE_SSH}
@@ -133,7 +133,7 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
 ;fi
 
 #####################################
-# Non-root user : PHPUnit path
+# Non-root user : PHPUnit path 单元测试
 #####################################
 
 # add ./vendor/bin to non-root user's bashrc (needed for phpunit)
@@ -143,7 +143,7 @@ RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
 
 #####################################
-# ImageMagick:
+# ImageMagick: 图片处理
 #####################################
 USER root
 ARG INSTALL_IMAGEMAGICK=false

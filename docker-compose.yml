@@ -14,7 +14,14 @@ services:
   workspace:
     build:
       context: ./workspace
-      args: null
+      args: 
+        - WORKSPACE_SSH_PORT=${WORKSPACE_SSH_PORT}
+        - INSTALL_IMAP=${WORKSPACE_INSTALL_IMAP}
+        - INSTALL_XDEBUG=${WORKSPACE_INSTALL_XDEBUG}
+        - INSTALL_WORKSPACE_SSH=${WORKSPACE_INSTALL_WORKSPACE_SSH}
+        - INSTALL_MONGO=${WORKSPACE_INSTALL_MONGO}
+        - INSTALL_PHPREDIS=${WORKSPACE_INSTALL_PHPREDIS}
+        - INSTALL_IMAGEMAGICK=${WORKSPACE_INSTALL_IMAGEMAGICK}
       dockerfile: "Dockerfile-{$PHP_VERSION}"
       volumes_from:
         - applications
@@ -31,7 +38,18 @@ services:
   php-fpm:
     build:
       context: ./php-fpm
-      args: null
+      args: 
+        - INSTALL_XDEBUG=${PHP_FPM_INSTALL_XDEBUG}
+        - INSTALL_PHPREDIS=${PHP_FPM_INSTALL_PHPREDIS}
+        - INSTALL_SWOOLE=${PHP_FPM_INSTALL_SWOOLE}
+        - INSTALL_MONGO=${PHP_FPM_INSTALL_MONGO}
+        - INSTALL_ZIP_ARCHIVE=${PHP_FPM_INSTALL_ZIP_ARCHIVE}
+        - INSTALL_MEMCACHED=${PHP_FPM_INSTALL_MEMCACHED}
+        - INSTALL_EXIF=${PHP_FPM_INSTALL_EXIF}
+        - INSTALL_OPCACHE=${PHP_FPM_INSTALL_OPCACHE}
+        - INSTALL_MYSQLI=${PHP_FPM_INSTALL_MYSQLI}
+        - INSTALL_TOKENIZER=${PHP_FPM_INSTALL_TOKENIZER}
+        - INSTALL_IMAGEMAGICK=${PHP_FPM_INSTALL_IMAGEMAGICK}
       volumes_from:
         - applications
       volumes:
