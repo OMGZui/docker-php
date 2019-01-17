@@ -1,12 +1,17 @@
-ARG MYSQL_VERSION=8.0
+ARG MYSQL_VERSION=latest
 FROM mysql:${MYSQL_VERSION}
 
-ENV TZ PRC
+LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    && chown -R mysql:root /var/lib/mysql/
+#####################################
+# Set Timezone
+#####################################
 
-ADD my.cnf /etc/mysql/conf.d/my.cnf
+ARG TZ=UTC
+ENV TZ ${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && chown -R mysql:root /var/lib/mysql/
+
+COPY my.cnf /etc/mysql/conf.d/my.cnf
 
 CMD ["mysqld"]
 
